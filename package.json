@@ -1,10 +1,10 @@
 {
   "name": "blinkchat-server",
+  "version": "1.0.0",
   "type": "module",
-  "version": "0.0.1",
+  "engines": { "node": ">=18" },
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js",
     "seed": "node seed.js"
   },
   "dependencies": {
