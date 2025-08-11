@@ -1,0 +1,12 @@
+services:
+- type: web
+  name: blinkchat-server
+  env: node
+  buildCommand: "cd server && npm install"
+  startCommand: "cd server && npm start"
+  autoDeploy: true
+  envVars:
+  - key: PORT
+    value: "10000"
+  - key: CORS_ORIGIN
+    value: "*"

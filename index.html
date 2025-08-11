@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlinkChat</title>
+<style>body{margin:0;font-family:system-ui;background:#0c0f14;color:#fff}.wrap{max-width:960px;margin:0 auto;padding:16px}.grid{display:grid;gap:12px;grid-template-columns:300px 1fr}.panel{background:#141a27;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}.item{padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:10px;margin:6px 0;cursor:pointer}.chat{height:480px;display:flex;flex-direction:column}.scroll{flex:1;overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;background:#0e131f}.msg{margin:6px 0;padding:8px 10px;border-radius:10px;background:#1d2740}.me{background:#2a3758;margin-left:auto}</style>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script></head>
+<body><div class="wrap"><h2>BlinkChat</h2>
+<div class="grid">
+<div class="panel"><div id="experts"></div></div>
+<div class="panel"><div class="chat"><div id="scroll" class="scroll"></div><div><input id="msg" placeholder="Type..." style="width:80%"><button id="send">Send</button></div></div></div>
+</div></div>
+<script>
+const API = (location.origin.includes('localhost')) ? 'http://localhost:4000' : location.origin;
+let chatId=null, socket=null;
+async function loadExperts(){const r=await fetch(API+'/api/experts');const arr=await r.json();const root=document.getElementById('experts');root.innerHTML='';arr.forEach(e=>{const d=document.createElement('div');d.className='item';d.textContent=(e.title||'Expert')+' — $'+((e.rate_per_min_cents||200)/100).toFixed(2)+'/min';d.onclick=()=>startChat(e.id);root.appendChild(d);});}
+async function startChat(expert_id){const r=await fetch(API+'/api/chats/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expert_id})});const j=await r.json();chatId=j.chat_id;connect();}
+function connect(){if(socket)socket.disconnect();socket=io(API,{transports:['websocket']});socket.on('connect',()=>socket.emit('join',{chat_id:chatId}));socket.on('message',m=>add('them',m.content));}
+function add(who,text){const d=document.createElement('div');d.className='msg '+(who==='me'?'me':'');d.textContent=text;document.getElementById('scroll').appendChild(d);document.getElementById('scroll').scrollTop=1e9;}
+document.getElementById('send').onclick=()=>{const v=document.getElementById('msg').value.trim();if(!v||!chatId)return;socket.emit('message',{chat_id:chatId,sender_type:'user',content:v});add('me',v);document.getElementById('msg').value='';};
+loadExperts();
+</script>
+</body></html>

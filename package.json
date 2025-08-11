@@ -1,0 +1,12 @@
+{
+  "name": "blinkchat",
+  "private": true,
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "postinstall": "cd server && npm i",
+    "start": "npm start -w server"
+  }
+}

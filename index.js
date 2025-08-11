@@ -1,0 +1,10 @@
+import 'dotenv/config';import express from 'express';import cors from 'cors';import helmet from 'helmet';
+import http from 'http';import { Server } from 'socket.io';import { init, getDB } from './db.js';import { v4 as id } from 'uuid';
+init(); const app=express(); app.use(cors()); app.use(helmet()); app.use(express.json());
+const server=http.createServer(app); const io=new Server(server,{cors:{origin:'*'}});
+app.get('/',(req,res)=>res.json({ok:true,name:'BlinkChat API'}));
+app.get('/api/experts',(req,res)=>{const db=getDB();res.json(db.prepare('SELECT * FROM experts').all());});
+app.post('/api/chats/start',(req,res)=>{const db=getDB();const cid=id();const per=200;db.prepare('INSERT INTO chats (id,user_id,expert_id,per_min_cents) VALUES (?,?,?,?)').run(cid, 'demo-user', req.body.expert_id, per);res.json({chat_id:cid,per_min_cents:per});});
+app.get('/api/chats/:id/messages',(req,res)=>{const db=getDB();res.json(db.prepare('SELECT * FROM messages WHERE chat_id=?').all(req.params.id));});
+io.on('connection', (s)=>{s.on('join',({chat_id})=>s.join(chat_id)); s.on('message',({chat_id,sender_type,content})=>{const db=getDB();const mid=id();db.prepare('INSERT INTO messages (id,chat_id,sender_type,content) VALUES (?,?,?,?)').run(mid,chat_id,sender_type,content);io.to(chat_id).emit('message',{id:mid,chat_id,sender_type,content,created_at:new Date().toISOString()});});});
+const PORT=process.env.PORT||4000;server.listen(PORT,()=>console.log('BlinkChat API on :'+PORT));
